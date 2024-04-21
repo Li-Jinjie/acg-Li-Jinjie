@@ -100,6 +100,14 @@ void dda_line(
   auto dx = x1 - x0;
   auto dy = y1 - y0;
   // write some code below to paint pixel on the line with color `brightness`
+  int num_step = std::max(abs(dx), abs(dy));
+  for (unsigned int i = 0; i < num_step; i++) {
+    float px = x0 + dx / num_step * i;
+    float py = y0 + dy / num_step * i;
+    if (px > 0 && px < width && py > 0){
+      img_data[round(py) * width + round(px)] = brightness;
+    }
+  }
 }
 
 int main() {
