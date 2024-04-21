@@ -67,6 +67,13 @@ void draw_polygon(
         float p1x = polygon_xy[i1_vtx * 2 + 0] - x;
         float p1y = polygon_xy[i1_vtx * 2 + 1] - y;
         // write a few lines of code to compute winding number (hint: use atan2)
+        float p0_len = sqrt(p0x * p0x + p0y * p0y);
+        float p1_len = sqrt(p1x * p1x + p1y * p1y);
+        float sin_theta = (-p0x * p1y + p0y * p1x) / (p0_len * p1_len);
+        float cos_theta = (p0x * p1x + p0y * p1y) / (p0_len * p1_len);
+        float theta = atan2(sin_theta, cos_theta);
+        winding_number += theta / (2 * M_PI);
+        std::cout << winding_number << std::endl;
       }
       const int int_winding_number = int(std::round(winding_number));
       if (int_winding_number == 1 ) { // if (x,y) is inside the polygon
