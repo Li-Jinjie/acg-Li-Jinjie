@@ -105,7 +105,7 @@ void dda_line(
     float px = x0 + dx / num_step * i;
     float py = y0 + dy / num_step * i;
     if (px > 0 && px < width && py > 0){
-      img_data[round(py) * width + round(px)] = brightness;
+      img_data[floor(py) * width + floor(px)] = brightness;
     }
   }
 }
