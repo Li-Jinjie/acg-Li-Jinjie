@@ -63,7 +63,7 @@ Eigen::VectorXf remove_zero_in_high_order(Eigen::VectorXf &p) {
  * coefficient for the linear term, and so on.
  * */
 Eigen::VectorXf lerp(Eigen::VectorXf &p0, Eigen::VectorXf &p1) {
-  p0 = remove_zero_in_high_order(p0);
+//  p0 = remove_zero_in_high_order(p0);
   Eigen::VectorXf p0_term = Eigen::VectorXf::Zero(p0.size() + 1);
   p0_term[0] = p0[0];
   for (int i = 1; i < p0.size(); i++) {
@@ -71,7 +71,7 @@ Eigen::VectorXf lerp(Eigen::VectorXf &p0, Eigen::VectorXf &p1) {
   }
   p0_term[p0.size()] = -p0[p0.size() - 1];
 
-  p1 = remove_zero_in_high_order(p1);
+//  p1 = remove_zero_in_high_order(p1);
   Eigen::VectorXf p1_term = Eigen::VectorXf::Zero(p1.size() + 1);
   for (int i = 0; i < p1.size(); i++) {
     p1_term[i + 1] = p1[i];
@@ -87,11 +87,122 @@ Eigen::VectorXf lerp(Eigen::VectorXf &p0, Eigen::VectorXf &p1) {
       p[i] += p1_term[i];
     }
   }
-  p = remove_zero_in_high_order(p);
+//  p = remove_zero_in_high_order(p);
   return p;
 }
 
+float calculate_polynomial(const Eigen::VectorXf &p, float t) {
+  float result = 0;
+  // Start from the highest degree coefficient
+  for (int i = p.size() - 1; i >= 0; --i) {
+    result = result * t + p[i];  // Horner's method
+  }
+  return result;
+}
+
+/***
+ *
+ * @param org ray origin
+ * @param dir ray direction (unit vector)
+ * @param ps one of the two end points
+ * @param pc control point
+ * @param pe the other end point
+ * @return the number of intersections
+ */
+int number_of_intersection_ray_against_quadratic_bezier(
+    const Eigen::Vector2f &org,
+    const Eigen::Vector2f &dir,
+    const Eigen::Vector2f &ps,
+    const Eigen::Vector2f &pc,
+    const Eigen::Vector2f &pe) {
+  // comment out below to do the assignment
+//  return number_of_intersection_ray_against_edge(org, dir, ps, pe);
+  // write some code below to find the intersection between ray and the quadratic
+
+  /* construct the equation with t */
+  // get p(t)
+  Eigen::VectorXf ps0 = Eigen::VectorXf::Zero(1);
+  ps0[0] = ps[0];
+  Eigen::VectorXf pc0 = Eigen::VectorXf::Zero(1);
+  pc0[0] = pc[0];
+  Eigen::VectorXf pe0 = Eigen::VectorXf::Zero(1);
+  pe0[0] = pe[0];
+  Eigen::VectorXf a0 = lerp(ps0, pc0);
+  Eigen::VectorXf b0 = lerp(pc0, pe0);
+  Eigen::VectorXf p0 = lerp(a0, b0);
+
+  Eigen::VectorXf ps1 = Eigen::VectorXf::Zero(1);
+  ps1[0] = ps[1];
+  Eigen::VectorXf pc1 = Eigen::VectorXf::Zero(1);
+  pc1[0] = pc[1];
+  Eigen::VectorXf pe1 = Eigen::VectorXf::Zero(1);
+  pe1[0] = pe[1];
+  Eigen::VectorXf a1 = lerp(ps1, pc1);
+  Eigen::VectorXf b1 = lerp(pc1, pe1);
+  Eigen::VectorXf p1 = lerp(a1, b1);
+
+//  std::cout << " p0.size() " << p0.size() << " p1.size() " << p1.size() << std::endl;
+  assert((p0.size() == p1.size()) && "p0 must be the same dimension with p1");
+
+  Eigen::MatrixXf p(2, p0.size());
+  p << p0.transpose(), p1.transpose();
+
+  // get w, where v * w^T=0
+  Eigen::Vector2f dir_perp = Eigen::Vector2f(-dir[1], dir[0]);
+
+  //  get p(t) * w - q * w = 0
+  Eigen::VectorXf lhe = dir_perp.transpose() * p;
+  lhe[0] += -dir_perp.dot(org);
+
+  /* find the root for the equation */
+  /* Since the equation is quadratic, we can get the analytic solution。
+   * Otherwise, we need to implement newton method or other numeric method to
+   * find the solution. */
+  float a = lhe[2];
+  float b = lhe[1];
+  float c = lhe[0];
+  float delta = b * b - 4 * a * c;
+
+  if (delta < 0) {
+    return 0; // no solution
+  }
+
+  float t_0 = (-b + sqrt(delta)) / (2 * a);
+  float t_1 = (-b - sqrt(delta)) / (2 * a);
+
+  /* calculate s */
+  float s_0 = (calculate_polynomial(p0, t_0) - org[0]) / dir[0];
+  float s_0_other = (calculate_polynomial(p1, t_0) - org[1]) / dir[1];
+//  std::cout << " s_0 " << s_0 << " s_0_other " << s_0_other << std::endl;
+  assert((s_0 - s_0_other < 1e-3) &&
+         "something wrong with root finding, please check!");
+
+  float s_1 = (calculate_polynomial(p0, t_1) - org[0]) / dir[0];
+  float s_1_other = (calculate_polynomial(p1, t_1) - org[1]) / dir[1];
+//  std::cout << " s_1 " << s_1 << " s_1_other " << s_1_other << std::endl;
+  assert((s_1 - s_1_other < 1e-3) &&
+         "something wrong with root finding, please check!");
+
+  /* check the solution */
+  int num_solution = 0;
+  if (s_0 > 0) {
+    num_solution++;
+  }
+  if (s_1 > 0) {
+    num_solution++;
+  }
+  return num_solution;
+}
+
 int main() {
+//  Eigen::VectorXf a(3);
+//  a << 1, 0, 0;
+//  Eigen::VectorXf b(4);
+//  b << 0, 1, 0, 0;
+//  Eigen::VectorXf c = lerp(a, b);
+//  // print c
+//  std::cout << c << std::endl;
+
   const auto input_file_path = std::filesystem::path(PROJECT_SOURCE_DIR) / ".." / "asset" / "r.svg";
   const auto [width, height, shape] = acg::svg_get_image_size_and_shape(input_file_path);
   if (width == 0) { // something went wrong in loading the function
