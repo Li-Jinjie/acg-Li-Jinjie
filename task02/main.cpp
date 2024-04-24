@@ -49,34 +49,12 @@ int number_of_intersection_ray_against_edge(
   //if (a * b > 0.f && d * c > 0.f && fabs(d) > fabs(c)) { return 1; }
 }
 
-/***
- *
- * @param org ray origin
- * @param dir ray direction (unit vector)
- * @param ps one of the two end points
- * @param pc control point
- * @param pe the other end point
- * @return the number of intersections
- */
-int number_of_intersection_ray_against_quadratic_bezier(
-    const Eigen::Vector2f &org,
-    const Eigen::Vector2f &dir,
-    const Eigen::Vector2f &ps,
-    const Eigen::Vector2f &pc,
-    const Eigen::Vector2f &pe) {
-  // comment out below to do the assignment
-  return number_of_intersection_ray_against_edge(org, dir, ps, pe);
-  // write some code below to find the intersection between ray and the quadratic
-}
-
-std::vector<float> remove_zero_in_high_order(std::vector<float> &p) {
-  auto length = p.size();
-  for (int i = 1; i < length; i++){
-    if (p[length - i] != 0) {
-      break;
-    }
-    p.pop_back();
+Eigen::VectorXf remove_zero_in_high_order(Eigen::VectorXf &p) {
+  int size = p.size();
+  while (size > 1 && p[size - 1] == 0) {
+    --size;
   }
+  p.conservativeResize(size);
   return p;
 }
 
@@ -84,23 +62,23 @@ std::vector<float> remove_zero_in_high_order(std::vector<float> &p) {
  * coefficients. p[0] is the coefficient for the constant term, p[1] is the
  * coefficient for the linear term, and so on.
  * */
-std::vector<float> lerp(std::vector<float> &p0, std::vector<float> &p1) {
+Eigen::VectorXf lerp(Eigen::VectorXf &p0, Eigen::VectorXf &p1) {
   p0 = remove_zero_in_high_order(p0);
-  std::vector<float> p0_term(p0.size() + 1, 0);
+  Eigen::VectorXf p0_term = Eigen::VectorXf::Zero(p0.size() + 1);
   p0_term[0] = p0[0];
   for (int i = 1; i < p0.size(); i++) {
     p0_term[i] = p0[i] - p0[i - 1];
   }
-  p0_term.back() = -p0[p0.size() - 1];
+  p0_term[p0.size()] = -p0[p0.size() - 1];
 
   p1 = remove_zero_in_high_order(p1);
-  std::vector<float> p1_term(p1.size() + 1, 0);
+  Eigen::VectorXf p1_term = Eigen::VectorXf::Zero(p1.size() + 1);
   for (int i = 0; i < p1.size(); i++) {
     p1_term[i + 1] = p1[i];
   }
 
-  auto max_order = std::max(p0_term.size(), p1_term.size());
-  std::vector<float> p(max_order, 0);
+  int max_order = std::max(p0_term.size(), p1_term.size());
+  Eigen::VectorXf p = Eigen::VectorXf::Zero(max_order);
   for (int i = 0; i < max_order; i++) {
     if (i < p0_term.size()) {
       p[i] += p0_term[i];
