@@ -69,6 +69,50 @@ int number_of_intersection_ray_against_quadratic_bezier(
   // write some code below to find the intersection between ray and the quadratic
 }
 
+std::vector<float> remove_zero_in_high_order(std::vector<float> &p) {
+  auto length = p.size();
+  for (int i = 1; i < length; i++){
+    if (p[length - i] != 0) {
+      break;
+    }
+    p.pop_back();
+  }
+  return p;
+}
+
+/* calculate the coefficients of Linear Interpolation and return the
+ * coefficients. p[0] is the coefficient for the constant term, p[1] is the
+ * coefficient for the linear term, and so on.
+ * */
+std::vector<float> lerp(std::vector<float> &p0, std::vector<float> &p1) {
+  p0 = remove_zero_in_high_order(p0);
+  std::vector<float> p0_term(p0.size() + 1, 0);
+  p0_term[0] = p0[0];
+  for (int i = 1; i < p0.size(); i++) {
+    p0_term[i] = p0[i] - p0[i - 1];
+  }
+  p0_term.back() = -p0[p0.size() - 1];
+
+  p1 = remove_zero_in_high_order(p1);
+  std::vector<float> p1_term(p1.size() + 1, 0);
+  for (int i = 0; i < p1.size(); i++) {
+    p1_term[i + 1] = p1[i];
+  }
+
+  auto max_order = std::max(p0_term.size(), p1_term.size());
+  std::vector<float> p(max_order, 0);
+  for (int i = 0; i < max_order; i++) {
+    if (i < p0_term.size()) {
+      p[i] += p0_term[i];
+    }
+    if (i < p1_term.size()) {
+      p[i] += p1_term[i];
+    }
+  }
+  p = remove_zero_in_high_order(p);
+  return p;
+}
+
 int main() {
   const auto input_file_path = std::filesystem::path(PROJECT_SOURCE_DIR) / ".." / "asset" / "r.svg";
   const auto [width, height, shape] = acg::svg_get_image_size_and_shape(input_file_path);
