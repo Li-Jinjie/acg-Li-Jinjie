@@ -142,15 +142,15 @@ int number_of_intersection_ray_against_quadratic_bezier(
   Eigen::MatrixXf p(2, p0.size());
   p << p0.transpose(), p1.transpose();
 
-  // get w, where v * w^T=0
+  // get w, where w^T * v =0
   Eigen::Vector2f dir_perp = Eigen::Vector2f(-dir[1], dir[0]);
 
-  //  get p(t) * w - q * w = 0
+  //  get w^T * p(t) - w^T * q = 0
   Eigen::VectorXf lhe = dir_perp.transpose() * p;
   lhe[0] += -dir_perp.dot(org);
 
   /* find the root for the equation */
-  /* Since the equation is quadratic, we can get the analytic solution。
+  /* Since the equation is quadratic, we can get the analytic solution.
    * Otherwise, we need to implement the newton method or other numeric methods to
    * find the solution. */
   float a = lhe[2];
@@ -177,6 +177,10 @@ int number_of_intersection_ray_against_quadratic_bezier(
     if (s_0 > 0) {
       num_solution++;
     }
+  }
+
+  if (delta == 0) {
+    return num_solution; // only one solution
   }
 
   if (t_1 > 0 && t_1 < 1) {
