@@ -70,6 +70,76 @@ void draw_3d_triangle_with_texture(
       Eigen::Matrix4f coeff;
       Eigen::Vector4f rhs;
 
+      // normalize the homogeneous coordinates to calculate focal length
+      Eigen::Vector3f point0 = q0.hnormalized();
+      Eigen::Vector3f point1 = q1.hnormalized();
+      Eigen::Vector3f point2 = q2.hnormalized();
+
+      float z0 = point0.norm();
+      float z1 = point1.norm();
+      float z2 = point2.norm();
+
+      float u0 = uv0.norm();
+      float u1 = uv1.norm();
+      float u2 = uv2.norm();
+
+      // calulate the focal lengths
+      float f0, f1, f2;
+      if (point0[0] != 0) {
+        f0 = u0 * z0 / point0[0];
+      } else {
+        f0 = u0 * z0 / 0.0001;
+      }
+      if (point1[0] != 0) {
+        f1 = u1 * z1 / point1[0];
+      } else {
+        f1 = u1 * z1 / 0.0001;
+      }
+      if (point2[0] != 0) {
+        f2 = u2 * z2 / point2[0];
+      } else {
+        f2 = u2 * z2 / 0.0001;
+      }
+
+//      if (point0[0] != 0) {
+//        f0 = uv0[0] * point0[2] / point0[0];
+//      } else {
+//        f0 = uv0[0] * point0[2] / 0.0001;
+//      }
+//      if (point1[0] != 0) {
+//        f1 = uv1[0] * point1[2] / point1[0];
+//      } else {
+//        f1 = uv1[0] * point1[2] / 0.0001;
+//      }
+//      if (point2[0] != 0) {
+//        f2 = uv2[0] * point2[2] / point2[0];
+//      } else {
+//        f2 = uv2[0] * point2[2] / 0.0001;
+//      }
+
+//      float f = (f0 + f1 + f2) / 3;
+//      // print f1, f2, f3, and f
+//      std::cout << f0 << " " << f1 << " " << f2 << " " << f << std::endl;
+
+
+//      coeff << 1, 1, 1, 0,
+//          f0 * q0[0], f1 * q1[0], f2 * q2[0], 0,
+//          f0 * q0[1], f1 * q1[1], f2 * q2[1], 0,
+//          q0[2], q1[2], q2[2], -1;
+      coeff << 1, 1, 1, 0,
+          f0 * point0[0], f1 * point1[0], f2 * point2[0], 0,
+          f0 * point0[1], f1 * point1[1], f2 * point2[1], 0,
+          point0[2], point1[2], point2[2], -1;
+      rhs << 1, iw, ih, 0;
+
+      Eigen::Vector4f result = coeff.householderQr().solve(rhs);
+
+      std::cout << "result \n" << result << std::endl;
+      float den = result[0] + result[1] + result[2];
+//      bc[0] = result[0] / den;
+//      bc[1] = result[1] / den;
+//      bc[2] = result[2] / den;
+
       // do not change below
       auto uv = uv0 * bc[0] + uv1 * bc[1] + uv2 * bc[2]; // uv coordinate of the pixel
       // compute pixel coordinate of the texture
