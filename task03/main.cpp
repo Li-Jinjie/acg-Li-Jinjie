@@ -53,9 +53,9 @@ void draw_3d_triangle_with_texture(
     std::vector<unsigned char> &img_data_tex) {
   for (unsigned int ih = 0; ih < height_out; ++ih) {
     for (unsigned int iw = 0; iw < width_out; ++iw) {
-//      const auto s = Eigen::Vector2f( // coordinate of the pixel in the normalized device coordinate [-1,1]^2
-//          ((float(iw) + 0.5f) * 2.f) / float(width_out) - 1.f,
-//          1.f - ((float(ih) + 0.5f) * 2.f) / float(height_out));
+      const auto s = Eigen::Vector2f( // coordinate of the pixel in the normalized device coordinate [-1,1]^2
+          ((float(iw) + 0.5f) * 2.f) / float(width_out) - 1.f,
+          1.f - ((float(ih) + 0.5f) * 2.f) / float(height_out));
 //      const auto r0 = q0.hnormalized()({0,1}); // coordinate of the point 0 in the normalized device coordinate [-1,1]^2
 //      const auto r1 = q1.hnormalized()({0,1});
 //      const auto r2 = q2.hnormalized()({0,1});
@@ -75,33 +75,17 @@ void draw_3d_triangle_with_texture(
       Eigen::Vector3f b = q1.hnormalized();
       Eigen::Vector3f c = q2.hnormalized();
 
-//      std::cout << "a \n" << a << std::endl;
-//      std::cout << "q0 \n" << q0 << std::endl;
-//      std::cout << "b \n" << b << std::endl;
-//      std::cout << "q1 \n" << q1 << std::endl;
-//      std::cout << "c \n" << c << std::endl;
-//      std::cout << "q2 \n" << q2 << std::endl;
-
-//      float frustrum_near_size = 0.55;
-//      float f = 2 / frustrum_near_size;
-      float f = 20;
-
-      coeff << 1, 1, 1, 0,
-          f * a[0], f * b[0], f * c[0], -float(0.5f * width_out - iw),
-          f * a[1], f * b[1], f * c[1], -float(ih - 0.5f * height_out),
-          a[2], b[2], c[2], -1;
-      rhs << 1, 0, 0, 0;
+      coeff << q0[0], q1[0], q2[0], 0,
+          q0[1], q1[1], q2[1], 0,
+          q0[2], q1[2], q2[2], -1,
+          1, 1, 1, 0;
+      rhs << s[0], s[1], 0, 1;
 
       Eigen::Vector4f result = coeff.householderQr().solve(rhs);
 
-//      std::cout << "coeff \n" << coeff << std::endl;
-//      std::cout << "rhs \n" << rhs << std::endl;
-//      std::cout << "result \n" << result << std::endl;
-
       Eigen::Vector3f bc = Eigen::Vector3f::Zero();
-      bc[0] = result[0];
-      bc[1] = result[1];
-      bc[2] = result[2];
+      bc = result.head<3>();
+      bc /= bc.sum();
       if (result[0] < 0. || result[1] < 0. || result[2] < 0.) { continue; } // the pixel is outside the triangle (r0, r1, r2)
 
       // do not change below
