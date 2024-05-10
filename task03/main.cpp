@@ -53,17 +53,17 @@ void draw_3d_triangle_with_texture(
     std::vector<unsigned char> &img_data_tex) {
   for (unsigned int ih = 0; ih < height_out; ++ih) {
     for (unsigned int iw = 0; iw < width_out; ++iw) {
-      const auto s = Eigen::Vector2f( // coordinate of the pixel in the normalized device coordinate [-1,1]^2
-          ((float(iw) + 0.5f) * 2.f) / float(width_out) - 1.f,
-          1.f - ((float(ih) + 0.5f) * 2.f) / float(height_out));
-      const auto r0 = q0.hnormalized()({0,1}); // coordinate of the point 0 in the normalized device coordinate [-1,1]^2
-      const auto r1 = q1.hnormalized()({0,1});
-      const auto r2 = q2.hnormalized()({0,1});
-      const float area0 = (r1 - s).cross(r2 - s);  // area of the 2d triangle connecting (s, r1, r2)
-      const float area1 = (r2 - s).cross(r0 - s);
-      const float area2 = (r0 - s).cross(r1 - s);
-      if (area0 < 0. || area1 < 0. || area2 < 0.) { continue; } // the pixel is outside the triangle (r0, r1, r2)
-      Eigen::Vector3f bc = Eigen::Vector3f(area0, area1, area2) / (area0 + area1 + area2); // barycentric coordinate on screen
+//      const auto s = Eigen::Vector2f( // coordinate of the pixel in the normalized device coordinate [-1,1]^2
+//          ((float(iw) + 0.5f) * 2.f) / float(width_out) - 1.f,
+//          1.f - ((float(ih) + 0.5f) * 2.f) / float(height_out));
+//      const auto r0 = q0.hnormalized()({0,1}); // coordinate of the point 0 in the normalized device coordinate [-1,1]^2
+//      const auto r1 = q1.hnormalized()({0,1});
+//      const auto r2 = q2.hnormalized()({0,1});
+//      const float area0 = (r1 - s).cross(r2 - s);  // area of the 2d triangle connecting (s, r1, r2)
+//      const float area1 = (r2 - s).cross(r0 - s);
+//      const float area2 = (r0 - s).cross(r1 - s);
+//      if (area0 < 0. || area1 < 0. || area2 < 0.) { continue; } // the pixel is outside the triangle (r0, r1, r2)
+//      Eigen::Vector3f bc = Eigen::Vector3f(area0, area1, area2) / (area0 + area1 + area2); // barycentric coordinate on screen
       // `bc` gives the barycentric coordinate **on the screen** and it is distorted.
       // Compute the barycentric coordinate ***on the 3d triangle** below that gives the correct texture mapping.
       // (Hint: formulate a linear system with 4x4 coefficient matrix and solve it to get the barycentric coordinate)
@@ -71,74 +71,37 @@ void draw_3d_triangle_with_texture(
       Eigen::Vector4f rhs;
 
       // normalize the homogeneous coordinates to calculate focal length
-      Eigen::Vector3f point0 = q0.hnormalized();
-      Eigen::Vector3f point1 = q1.hnormalized();
-      Eigen::Vector3f point2 = q2.hnormalized();
+      Eigen::Vector3f a = q0.hnormalized();
+      Eigen::Vector3f b = q1.hnormalized();
+      Eigen::Vector3f c = q2.hnormalized();
 
-      float z0 = point0.norm();
-      float z1 = point1.norm();
-      float z2 = point2.norm();
+//      std::cout << "a \n" << a << std::endl;
+//      std::cout << "q0 \n" << q0 << std::endl;
+//      std::cout << "b \n" << b << std::endl;
+//      std::cout << "q1 \n" << q1 << std::endl;
+//      std::cout << "c \n" << c << std::endl;
+//      std::cout << "q2 \n" << q2 << std::endl;
 
-      float u0 = uv0.norm();
-      float u1 = uv1.norm();
-      float u2 = uv2.norm();
+      float frustrum_near_size = 0.55;
+      float f = 2 / frustrum_near_size;
 
-      // calulate the focal lengths
-      float f0, f1, f2;
-      if (point0[0] != 0) {
-        f0 = u0 * z0 / point0[0];
-      } else {
-        f0 = u0 * z0 / 0.0001;
-      }
-      if (point1[0] != 0) {
-        f1 = u1 * z1 / point1[0];
-      } else {
-        f1 = u1 * z1 / 0.0001;
-      }
-      if (point2[0] != 0) {
-        f2 = u2 * z2 / point2[0];
-      } else {
-        f2 = u2 * z2 / 0.0001;
-      }
-
-//      if (point0[0] != 0) {
-//        f0 = uv0[0] * point0[2] / point0[0];
-//      } else {
-//        f0 = uv0[0] * point0[2] / 0.0001;
-//      }
-//      if (point1[0] != 0) {
-//        f1 = uv1[0] * point1[2] / point1[0];
-//      } else {
-//        f1 = uv1[0] * point1[2] / 0.0001;
-//      }
-//      if (point2[0] != 0) {
-//        f2 = uv2[0] * point2[2] / point2[0];
-//      } else {
-//        f2 = uv2[0] * point2[2] / 0.0001;
-//      }
-
-//      float f = (f0 + f1 + f2) / 3;
-//      // print f1, f2, f3, and f
-//      std::cout << f0 << " " << f1 << " " << f2 << " " << f << std::endl;
-
-
-//      coeff << 1, 1, 1, 0,
-//          f0 * q0[0], f1 * q1[0], f2 * q2[0], 0,
-//          f0 * q0[1], f1 * q1[1], f2 * q2[1], 0,
-//          q0[2], q1[2], q2[2], -1;
       coeff << 1, 1, 1, 0,
-          f0 * point0[0], f1 * point1[0], f2 * point2[0], 0,
-          f0 * point0[1], f1 * point1[1], f2 * point2[1], 0,
-          point0[2], point1[2], point2[2], -1;
-      rhs << 1, iw, ih, 0;
+          f * a[0], f * b[0], f * c[0], -float(iw),
+          f * a[1], f * b[1], f * c[1], -float(ih),
+          a[2], b[2], c[2], -1;
+      rhs << 1, 0, 0, 0;
 
       Eigen::Vector4f result = coeff.householderQr().solve(rhs);
 
-      std::cout << "result \n" << result << std::endl;
-      float den = result[0] + result[1] + result[2];
-//      bc[0] = result[0] / den;
-//      bc[1] = result[1] / den;
-//      bc[2] = result[2] / den;
+//      std::cout << "coeff \n" << coeff << std::endl;
+//      std::cout << "rhs \n" << rhs << std::endl;
+//      std::cout << "result \n" << result << std::endl;
+
+      Eigen::Vector3f bc = Eigen::Vector3f::Zero();
+      bc[0] = result[0];
+      bc[1] = result[1];
+      bc[2] = result[2];
+      if (result[0] < 0. || result[1] < 0. || result[2] < 0.) { continue; } // the pixel is outside the triangle (r0, r1, r2)
 
       // do not change below
       auto uv = uv0 * bc[0] + uv1 * bc[1] + uv2 * bc[2]; // uv coordinate of the pixel
