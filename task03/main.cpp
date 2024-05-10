@@ -82,12 +82,13 @@ void draw_3d_triangle_with_texture(
 //      std::cout << "c \n" << c << std::endl;
 //      std::cout << "q2 \n" << q2 << std::endl;
 
-      float frustrum_near_size = 0.55;
-      float f = 2 / frustrum_near_size;
+//      float frustrum_near_size = 0.55;
+//      float f = 2 / frustrum_near_size;
+      float f = 20;
 
       coeff << 1, 1, 1, 0,
-          f * a[0], f * b[0], f * c[0], -float(iw),
-          f * a[1], f * b[1], f * c[1], -float(ih),
+          f * a[0], f * b[0], f * c[0], -float(0.5f * width_out - iw),
+          f * a[1], f * b[1], f * c[1], -float(ih - 0.5f * height_out),
           a[2], b[2], c[2], -1;
       rhs << 1, 0, 0, 0;
 
