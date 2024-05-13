@@ -75,11 +75,11 @@ void draw_3d_triangle_with_texture(
       Eigen::Vector3f b = q1.hnormalized();
       Eigen::Vector3f c = q2.hnormalized();
 
-      coeff << q0[0], q1[0], q2[0], 0,
-          q0[1], q1[1], q2[1], 0,
-          q0[2], q1[2], q2[2], -1,
-          q0[3], q1[3], q2[3], 0;
-      rhs << s[0], s[1], 0, 1;
+      coeff << q0[0], q1[0], q2[0], -s[0],
+          q0[1], q1[1], q2[1], -s[1],
+          q0[3], q1[3], q2[3], -1,
+          1, 1, 1, 0;
+      rhs << 0, 0, 0, 1;
 
       Eigen::Vector4f result = coeff.householderQr().solve(rhs);
 
