@@ -24,9 +24,12 @@ void main()
         // make sure the occlusion is correctly computed.
         // the mirror is behind the armadillo, so the reflected image should be behind the armadillo.
         // furthermore, make sure the occlusion is correctly computed for the reflected image.
-        //x0 = ???
-        //y0 = ???
-        //z0 = ???
+        vec3 org2x = vec3(x0, y0, z0) - org;
+        vec3 org2x_proj = dot(org2x, nrm) * nrm;
+        vec3 refl_p = org + (org2x - org2x_proj * 2);
+        x0 = refl_p.x;
+        y0 = refl_p.y;
+        z0 = refl_p.z;
     }
     // do not edit below
 
