@@ -31,6 +31,8 @@ void main()
         y0 = refl_p.y;
         z0 = refl_p.z;
     }
+//    z0 += 0.5;
+    z0 /= 100;
     // do not edit below
 
     // "gl_Position" is the *output* vertex coordinate in the
