@@ -58,7 +58,16 @@ float SDF(vec3 pos)
 vec3 SDF_color(vec3 pos)
 {
   // write some code below to return color (RGB from 0 to 1) to paint the object describe in README.md
-  return vec3(0., 1., 0.); // comment out and define new color
+  vec3 color = vec3(0., 1., 0.);
+  if (sdBox(pos, vec3(box_size, box_size, box_size)) >= 0)
+  {
+    color = vec3(1., 0., 0.);
+  }
+  if (sdSphere(pos, rad_sphere) >= 0)
+  {
+    color = vec3(0., 0., 1.);
+  }
+  return color;
 }
 
 uniform float time; // current time given from CPU
