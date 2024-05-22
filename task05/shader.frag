@@ -38,25 +38,15 @@ float SDF(vec3 pos)
   float d0 = sdCappedCylinder(pos, len_cylinder, rad_cylinder);
   // write some code to combine the signed distance fields above to design the object described in the README.md
   // reference: https://iquilezles.org/articles/distfunctions/
+
   // group A
-  vec3 pos_1 = pos;  // rotate the cylinder to x direction
-  pos_1.x = pos.y;
-  pos_1.y = pos.z;
-  pos_1.z = pos.x;
-  float d1 = sdCappedCylinder(pos_1, len_cylinder, rad_cylinder);
-
-  vec3 pos_2 = pos;  // rotate the cylinder to y direction
-  pos_2.x = pos.z;
-  pos_2.y = pos.x;
-  pos_2.z = pos.y;
-  float d2 = sdCappedCylinder(pos_2, len_cylinder, rad_cylinder);
-
+  float d1 = sdCappedCylinder(vec3(pos.y, pos.z, pos.x), len_cylinder, rad_cylinder);  // rotate to x direction
+  float d2 = sdCappedCylinder(vec3(pos.z, pos.x, pos.y), len_cylinder, rad_cylinder);  // rotate to y direction
   float d_a = min(min(d0, d1), d2);  // union
 
   // group B
   float d3 = sdBox(pos, vec3(box_size, box_size, box_size));
   float d4 = sdSphere(pos, rad_sphere);
-
   float d_b = max(d3, d4);  // intersection
 
   // B - A
