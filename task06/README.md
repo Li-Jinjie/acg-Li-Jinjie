@@ -38,9 +38,9 @@ The program output the computation time. Fill the table below to compare the tim
 
 
 
-| brute force | BVH    |
-| ----------- | ------ |
-| ??? ms      | ??? ms |
+| brute force | BVH   |
+|-------------|-------|
+| 2385 ms     | 18 ms |
 
 
 
