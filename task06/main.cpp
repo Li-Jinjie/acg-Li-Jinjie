@@ -51,7 +51,7 @@ auto sample_hemisphere(
 
   // For Problem 4, write some code below to sample hemisphere with cosign weight
   // (i.e., the sampling frequency is higher at the top)
-
+  pdf = nrm.dot(dir_loc) / dir_loc.norm() / float(M_PI);
 
   // end of Problem 4. Do not modify the two lines below
   const auto dir_out = local_to_world_vector_transformation(nrm) * dir_loc; // rotate the sample (zup -> nrm)
@@ -247,7 +247,7 @@ int main() {
               pos0, dir, tri2vtx, vtx2xyz, bvhnodes);
           if (!res1) { // if the ray does not hit anything
 //            sum += 1.f; // Problem 3: This is a bug. write some correct code (hint: use `dir.dot(nrm)`, `pdf`, `M_PI`).
-            sum += dir.dot(nrm) / pdf / M_PI;
+            sum += dir.dot(nrm) / pdf / float(M_PI);
           }
         }
         img_data_ao[ih * img_width + iw] = sum / float(num_sample_ao); // do not change
