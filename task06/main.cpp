@@ -235,7 +235,7 @@ int main() {
         img_data_nrm[(ih * img_width + iw) * 3 + 2] = nrm.z() * 0.5f + 0.5f;
       }
 //      continue; // comment out here for Problem 3,4
-      //
+
       if (res) { // ambient occlusion computation
         const unsigned int num_sample_ao = 100;
         float sum = 0;
@@ -246,7 +246,8 @@ int main() {
           const auto res1 = find_intersection_between_ray_and_triangle_mesh(
               pos0, dir, tri2vtx, vtx2xyz, bvhnodes);
           if (!res1) { // if the ray does not hit anything
-            sum += 1.f; // Problem 3: This is a bug. write some correct code (hint: use `dir.dot(nrm)`, `pdf`, `M_PI`).
+//            sum += 1.f; // Problem 3: This is a bug. write some correct code (hint: use `dir.dot(nrm)`, `pdf`, `M_PI`).
+            sum += dir.dot(nrm) / pdf / M_PI;
           }
         }
         img_data_ao[ih * img_width + iw] = sum / float(num_sample_ao); // do not change
