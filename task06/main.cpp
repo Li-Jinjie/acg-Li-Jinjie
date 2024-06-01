@@ -56,7 +56,8 @@ auto sample_hemisphere(
 
   // For Problem 4, write some code below to sample hemisphere with cosign weight
   // (i.e., the sampling frequency is higher at the top)
-//  pdf = nrm.dot(dir_loc) / dir_loc.norm() / float(M_PI);
+  const float cos_theta = z;  // dir_loc * cos_theta = z
+  pdf = cos_theta / float(M_PI);
 
   // end of Problem 4. Do not modify the two lines below
   const auto dir_out = local_to_world_vector_transformation(nrm) * dir_loc; // rotate the sample (zup -> nrm)
