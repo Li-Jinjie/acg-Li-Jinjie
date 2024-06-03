@@ -386,7 +386,7 @@ int main() {
         if (hit1_object == -1){ continue; }
         float hit1_rad = spheres[hit1_object].emission;
         // compute the contribution for this pixel
-        float rad = 0.f; // replace this with some code
+        float rad = hit0_brdf * hit1_rad / hit0_pdf / nsample;
         img_brdf[ih * img_width + iw] += rad;
       }
       // -----------------
