@@ -405,7 +405,7 @@ int main() {
         float hit0_pdf_brdf_sample = spheres[hit0_object].pdf(hit0_normal, cam_ray_dir, hit0_refl);
         float hit0_pdf_light_sample = pdf_light_sample(hit0_normal, hit0_pos, cam_ray_dir, hit0_refl, hit0_object);
         float w_light = hit0_pdf_light_sample / (hit0_pdf_light_sample + hit0_pdf_brdf_sample);
-        float rad = w_light * hit0_brdf * hit1_rad / hit0_pdf_light_sample/ nsample;
+        float rad = w_light * hit0_brdf * hit1_rad / hit0_pdf_light_sample/ (nsample / 2.);
         img_mis[ih * img_width + iw] += rad;
       }
       for (int isample = 0; isample < nsample / 2; ++isample) {
@@ -418,7 +418,7 @@ int main() {
         float hit0_pdf_light_sample = pdf_light_sample(hit0_normal, hit0_pos, cam_ray_dir, hit0_refl, hit0_object);
         float hit0_pdf_brdf_sample = spheres[hit0_object].pdf(hit0_normal, cam_ray_dir, hit0_refl);
         float w_brdf = hit0_pdf_brdf_sample / (hit0_pdf_light_sample + hit0_pdf_brdf_sample);
-        float rad = w_brdf * hit0_brdf * hit1_rad / hit0_pdf_brdf_sample/ nsample;
+        float rad = w_brdf * hit0_brdf * hit1_rad / hit0_pdf_brdf_sample/ (nsample / 2.);
         img_mis[ih * img_width + iw] += rad;
       }
     }
