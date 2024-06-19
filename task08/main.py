@@ -109,7 +109,8 @@ class HelloWorld(mglw.WindowConfig):
                 # hint: use np.matmul for matrix multiplication
                 # hint: assume that rig weights w add up to one
 
-                # p1 += ???
+                p12bone = np.matmul(inverseBindingMatrix, p0) * w
+                p1 += np.matmul(globalTransformation, p12bone)
 
             self.vtx2xyz_def[i_vtx] = p1[:3]  # from homogeneous coordinates to the Cartesian coordinates
 
