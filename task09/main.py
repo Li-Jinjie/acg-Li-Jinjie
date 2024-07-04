@@ -150,7 +150,7 @@ class HelloWorld(mglw.WindowConfig):
         x = spsolve(A, b)
 
         # Problem 3:
-        # minimize (x-x_def)D(x-x_def) + (x-x_ini)L^2(x-x_ini) equals to solve (D + L) @ x = D @ x_def + L^2 @ x_ini
+        # minimize (x-x_def)D(x-x_def) + (x-x_ini)L^2(x-x_ini) equals to solve (D + L^2) @ x = D @ x_def + L^2 @ x_ini
         # A = D + L^2
         A = self.matrix_fix + self.matrix_bilaplace
         # b = D @ x_def + L^2 @ x_ini
