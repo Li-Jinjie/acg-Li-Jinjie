@@ -141,7 +141,6 @@ class HelloWorld(mglw.WindowConfig):
 
         # Problem 2:
         # minimize (x-x_def)D(x-x_def) + (x-x_ini)L(x-x_ini) equals to solve (D + L) @ x = D @ x_def + L @ x_ini
-
         # A = D + L
         A = self.matrix_fix + self.matrix_laplace
         # b = D @ x_def + L @ x_ini
