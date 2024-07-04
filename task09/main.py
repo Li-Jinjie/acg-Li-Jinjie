@@ -148,6 +148,16 @@ class HelloWorld(mglw.WindowConfig):
         b = self.matrix_fix @ self.vtx2xyz_def + self.matrix_laplace @ self.vtx2xyz_ini
         # solve A @ x = b
         x = spsolve(A, b)
+
+        # Problem 3:
+        # minimize (x-x_def)D(x-x_def) + (x-x_ini)L^2(x-x_ini) equals to solve (D + L) @ x = D @ x_def + L^2 @ x_ini
+        # A = D + L^2
+        A = self.matrix_fix + self.matrix_bilaplace
+        # b = D @ x_def + L^2 @ x_ini
+        b = self.matrix_fix @ self.vtx2xyz_def + self.matrix_bilaplace @ self.vtx2xyz_ini
+        # solve A @ x = b
+        x = spsolve(A, b)
+
         # convert the result to the contiguous array format and the same data type as self.vtx2xyz_def
         self.vtx2xyz_def = x.copy(order='C').astype(self.vtx2xyz_def.dtype)
 
