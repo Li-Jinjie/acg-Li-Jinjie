@@ -139,10 +139,12 @@ class HelloWorld(mglw.WindowConfig):
         # you may use `spsolve` to solve the liner system
         # spsolve: https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.spsolve.html#scipy.sparse.linalg.spsolve
 
-        # Problem 2: minimize (x-x_def)D(x-x_def) + (x-x_ini)L(x-x_ini) equals to solve (D + L) @ x = D @ x_def + L @ x_ini
+        # Problem 2:
+        # minimize (x-x_def)D(x-x_def) + (x-x_ini)L(x-x_ini) equals to solve (D + L) @ x = D @ x_def + L @ x_ini
+
         # A = D + L
         A = self.matrix_fix + self.matrix_laplace
-        # b = D x_def + L x_ini
+        # b = D @ x_def + L @ x_ini
         b = self.matrix_fix @ self.vtx2xyz_def + self.matrix_laplace @ self.vtx2xyz_ini
         # solve A @ x = b
         x = spsolve(A, b)
