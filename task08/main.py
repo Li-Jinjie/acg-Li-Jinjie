@@ -11,7 +11,6 @@ import parse_gltf
 import util_for_task08
 
 
-
 class HelloWorld(mglw.WindowConfig):
     '''
     Window to show the gltf animation
@@ -37,7 +36,7 @@ class HelloWorld(mglw.WindowConfig):
         self.animation_duration = 0
         for ch in self.channels:
             self.animation_duration = max(self.animation_duration, ch.times.max())
-        self. is_screenshot_taken = False
+        self.is_screenshot_taken = False
 
         self.prog = self.ctx.program(
             vertex_shader='''
@@ -94,7 +93,8 @@ class HelloWorld(mglw.WindowConfig):
                 continue
             # below, write one or two lines of code to compute `bone2globalTransformation[i_bone]`
             # hint: use numpy.matmul for multiplying nd-array
-            # bone2globalTransformation[i_bone] = ???
+            bone2globalTransformation[i_bone] = np.matmul(bone2globalTransformation[i_bone_parent],
+                                                          bone2relativeTransformation[i_bone])
 
         for i_vtx in range(self.vtx2xyz_ini.shape[0]):  # for each point in mesh
             p0 = self.vtx2xyz_ini[i_vtx]
@@ -109,7 +109,8 @@ class HelloWorld(mglw.WindowConfig):
                 # hint: use np.matmul for matrix multiplication
                 # hint: assume that rig weights w add up to one
 
-                # p1 += ???
+                p12bone = np.matmul(inverseBindingMatrix, p0) * w
+                p1 += np.matmul(globalTransformation, p12bone)
 
             self.vtx2xyz_def[i_vtx] = p1[:3]  # from homogeneous coordinates to the Cartesian coordinates
 
@@ -142,12 +143,12 @@ class HelloWorld(mglw.WindowConfig):
             self.prog['color'].value = (0., 0.0, 0.8)
             self.vao_cyl.render()
             # x_axis
-            x_rot = pyrr.Matrix44.from_y_rotation(math.pi*0.5)
+            x_rot = pyrr.Matrix44.from_y_rotation(math.pi * 0.5)
             self.prog['matrix'].value = tuple((np.matmul(x_rot.transpose(), transf)).flatten())  # column major
             self.prog['color'].value = (0.8, 0., 0.)
             self.vao_cyl.render()
             # y_axis
-            y_rot = pyrr.Matrix44.from_x_rotation(-math.pi*0.5)
+            y_rot = pyrr.Matrix44.from_x_rotation(-math.pi * 0.5)
             self.prog['matrix'].value = tuple((np.matmul(y_rot.transpose(), transf)).flatten())  # column major
             self.prog['color'].value = (0.0, 0.8, 0.)
             self.vao_cyl.render()
@@ -164,7 +165,6 @@ class HelloWorld(mglw.WindowConfig):
             rgb = rgb.reshape(self.ctx.fbo.size[0], self.ctx.fbo.size[1], 3)
             rgb = Image.fromarray(rgb)
             ImageOps.flip(rgb).save("output.png")
-
 
 
 def main():
