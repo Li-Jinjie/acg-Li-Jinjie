@@ -56,19 +56,32 @@ void draw_3d_triangle_with_texture(
       const auto s = Eigen::Vector2f( // coordinate of the pixel in the normalized device coordinate [-1,1]^2
           ((float(iw) + 0.5f) * 2.f) / float(width_out) - 1.f,
           1.f - ((float(ih) + 0.5f) * 2.f) / float(height_out));
-      const auto r0 = q0.hnormalized()({0,1}); // coordinate of the point 0 in the normalized device coordinate [-1,1]^2
-      const auto r1 = q1.hnormalized()({0,1});
-      const auto r2 = q2.hnormalized()({0,1});
-      const float area0 = (r1 - s).cross(r2 - s);  // area of the 2d triangle connecting (s, r1, r2)
-      const float area1 = (r2 - s).cross(r0 - s);
-      const float area2 = (r0 - s).cross(r1 - s);
-      if (area0 < 0. || area1 < 0. || area2 < 0.) { continue; } // the pixel is outside the triangle (r0, r1, r2)
-      Eigen::Vector3f bc = Eigen::Vector3f(area0, area1, area2) / (area0 + area1 + area2); // barycentric coordinate on screen
+//      const auto r0 = q0.hnormalized()({0,1}); // coordinate of the point 0 in the normalized device coordinate [-1,1]^2
+//      const auto r1 = q1.hnormalized()({0,1});
+//      const auto r2 = q2.hnormalized()({0,1});
+//      const float area0 = (r1 - s).cross(r2 - s);  // area of the 2d triangle connecting (s, r1, r2)
+//      const float area1 = (r2 - s).cross(r0 - s);
+//      const float area2 = (r0 - s).cross(r1 - s);
+//      if (area0 < 0. || area1 < 0. || area2 < 0.) { continue; } // the pixel is outside the triangle (r0, r1, r2)
+//      Eigen::Vector3f bc = Eigen::Vector3f(area0, area1, area2) / (area0 + area1 + area2); // barycentric coordinate on screen
       // `bc` gives the barycentric coordinate **on the screen** and it is distorted.
       // Compute the barycentric coordinate ***on the 3d triangle** below that gives the correct texture mapping.
       // (Hint: formulate a linear system with 4x4 coefficient matrix and solve it to get the barycentric coordinate)
       Eigen::Matrix4f coeff;
       Eigen::Vector4f rhs;
+
+      coeff << q0[0], q1[0], q2[0], -s[0],
+          q0[1], q1[1], q2[1], -s[1],
+          q0[3], q1[3], q2[3], -1,
+          1, 1, 1, 0;
+      rhs << 0, 0, 0, 1;
+
+      Eigen::Vector4f result = coeff.householderQr().solve(rhs);
+
+      Eigen::Vector3f bc = Eigen::Vector3f::Zero();
+      bc = result.head<3>();
+      bc /= bc.sum();
+      if (result[0] < 0. || result[1] < 0. || result[2] < 0.) { continue; } // the pixel is outside the triangle (r0, r1, r2)
 
       // do not change below
       auto uv = uv0 * bc[0] + uv1 * bc[1] + uv2 * bc[2]; // uv coordinate of the pixel
