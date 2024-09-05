@@ -37,14 +37,37 @@ float SDF(vec3 pos)
 {
   float d0 = sdCappedCylinder(pos, len_cylinder, rad_cylinder);
   // write some code to combine the signed distance fields above to design the object described in the README.md
-  return d0; // comment out and define new distance
+  // reference: https://iquilezles.org/articles/distfunctions/
+
+  // group A
+  float d1 = sdCappedCylinder(vec3(pos.y, pos.z, pos.x), len_cylinder, rad_cylinder);  // rotate to x direction
+  float d2 = sdCappedCylinder(vec3(pos.z, pos.x, pos.y), len_cylinder, rad_cylinder);  // rotate to y direction
+  float d_a = min(min(d0, d1), d2);  // union
+
+  // group B
+  float d3 = sdBox(pos, vec3(box_size, box_size, box_size));
+  float d4 = sdSphere(pos, rad_sphere);
+  float d_b = max(d3, d4);  // intersection
+
+  // B - A
+  float d = max(d_b, -d_a);  // subtraction
+  return d;
 }
 
 /// RGB color at the position `pos`
 vec3 SDF_color(vec3 pos)
 {
   // write some code below to return color (RGB from 0 to 1) to paint the object describe in README.md
-  return vec3(0., 1., 0.); // comment out and define new color
+  vec3 color = vec3(0., 1., 0.);
+  if (sdBox(pos, vec3(box_size, box_size, box_size)) >= 0)
+  {
+    color = vec3(1., 0., 0.);
+  }
+  if (sdSphere(pos, rad_sphere) >= 0)
+  {
+    color = vec3(0., 0., 1.);
+  }
+  return color;
 }
 
 uniform float time; // current time given from CPU
