@@ -24,7 +24,6 @@ float area(
   return 0.5f * (v01[1] * v02[0] - v01[0] * v02[1]); // left-handed coordinate (because pixel y-coordinate is going down)
 }
 
-
 /***
  * compute number of intersection of a ray against a line segment
  * @param org ray origin
@@ -49,6 +48,54 @@ int number_of_intersection_ray_against_edge(
   //if (a * b > 0.f && d * c > 0.f && fabs(d) > fabs(c)) { return 1; }
 }
 
+Eigen::VectorXf remove_zero_in_high_order(Eigen::VectorXf &p) {
+  int size = p.size();
+  while (size > 1 && p[size - 1] == 0) {
+    --size;
+  }
+  p.conservativeResize(size);
+  return p;
+}
+
+/* calculate the coefficients of Linear Interpolation and return the
+ * coefficients. p[0] is the coefficient for the constant term, p[1] is the
+ * coefficient for the linear term, and so on.
+ * */
+Eigen::VectorXf lerp(Eigen::VectorXf &p0, Eigen::VectorXf &p1) {
+  Eigen::VectorXf p0_term = Eigen::VectorXf::Zero(p0.size() + 1);
+  p0_term[0] = p0[0];
+  for (int i = 1; i < p0.size(); i++) {
+    p0_term[i] = p0[i] - p0[i - 1];
+  }
+  p0_term[p0.size()] = -p0[p0.size() - 1];
+
+  Eigen::VectorXf p1_term = Eigen::VectorXf::Zero(p1.size() + 1);
+  for (int i = 0; i < p1.size(); i++) {
+    p1_term[i + 1] = p1[i];
+  }
+
+  int max_order = std::max(p0_term.size(), p1_term.size());
+  Eigen::VectorXf p = Eigen::VectorXf::Zero(max_order);
+  for (int i = 0; i < max_order; i++) {
+    if (i < p0_term.size()) {
+      p[i] += p0_term[i];
+    }
+    if (i < p1_term.size()) {
+      p[i] += p1_term[i];
+    }
+  }
+  return p;
+}
+
+float calculate_polynomial(const Eigen::VectorXf &p, float t) {
+  float result = 0;
+  // Start from the highest degree coefficient
+  for (int i = p.size() - 1; i >= 0; --i) {
+    result = result * t + p[i];  // Horner's method
+  }
+  return result;
+}
+
 /***
  *
  * @param org ray origin
@@ -65,8 +112,89 @@ int number_of_intersection_ray_against_quadratic_bezier(
     const Eigen::Vector2f &pc,
     const Eigen::Vector2f &pe) {
   // comment out below to do the assignment
-  return number_of_intersection_ray_against_edge(org, dir, ps, pe);
+//  return number_of_intersection_ray_against_edge(org, dir, ps, pe);
   // write some code below to find the intersection between ray and the quadratic
+
+  /* construct the equation with t */
+  // get p(t)
+  Eigen::VectorXf ps0 = Eigen::VectorXf::Zero(1);
+  ps0[0] = ps[0];
+  Eigen::VectorXf pc0 = Eigen::VectorXf::Zero(1);
+  pc0[0] = pc[0];
+  Eigen::VectorXf pe0 = Eigen::VectorXf::Zero(1);
+  pe0[0] = pe[0];
+  Eigen::VectorXf a0 = lerp(ps0, pc0);
+  Eigen::VectorXf b0 = lerp(pc0, pe0);
+  Eigen::VectorXf p0 = lerp(a0, b0);
+
+  Eigen::VectorXf ps1 = Eigen::VectorXf::Zero(1);
+  ps1[0] = ps[1];
+  Eigen::VectorXf pc1 = Eigen::VectorXf::Zero(1);
+  pc1[0] = pc[1];
+  Eigen::VectorXf pe1 = Eigen::VectorXf::Zero(1);
+  pe1[0] = pe[1];
+  Eigen::VectorXf a1 = lerp(ps1, pc1);
+  Eigen::VectorXf b1 = lerp(pc1, pe1);
+  Eigen::VectorXf p1 = lerp(a1, b1);
+
+  assert((p0.size() == p1.size()) && "p0 must be the same dimension with p1");
+
+  Eigen::MatrixXf p(2, p0.size());
+  p << p0.transpose(), p1.transpose();
+
+  // get w, where w^T * v =0
+  Eigen::Vector2f dir_perp = Eigen::Vector2f(-dir[1], dir[0]);
+
+  //  get w^T * p(t) - w^T * q = 0
+  Eigen::VectorXf lhe = dir_perp.transpose() * p;
+  lhe[0] += -dir_perp.dot(org);
+
+  /* find the root for the equation */
+  /* Since the equation is quadratic, we can get the analytic solution.
+   * Otherwise, we need to implement the newton method or other numeric methods to
+   * find the solution. */
+  float a = lhe[2];
+  float b = lhe[1];
+  float c = lhe[0];
+  float delta = b * b - 4 * a * c;
+
+  if (delta < 0) {
+    return 0; // no solution
+  }
+
+  float t_0 = (-b + sqrt(delta)) / (2 * a);
+  float t_1 = (-b - sqrt(delta)) / (2 * a);
+
+  /* calculate s and check the solution: 0<=t<=1 and s>0 */
+  int num_solution = 0;
+
+  if (t_0 > 0 && t_0 < 1) {
+    float s_0 = (calculate_polynomial(p0, t_0) - org[0]) / dir[0];
+    float s_0_other = (calculate_polynomial(p1, t_0) - org[1]) / dir[1];
+    //  std::cout << " s_0 " << s_0 << " s_0_other " << s_0_other << std::endl;
+    assert((s_0 - s_0_other < 1e-3) &&
+           "something wrong with root finding, please check!");
+    if (s_0 > 0) {
+      num_solution++;
+    }
+  }
+
+  if (delta == 0) {
+    return num_solution; // only one solution
+  }
+
+  if (t_1 > 0 && t_1 < 1) {
+    float s_1 = (calculate_polynomial(p0, t_1) - org[0]) / dir[0];
+    float s_1_other = (calculate_polynomial(p1, t_1) - org[1]) / dir[1];
+    //  std::cout << " s_1 " << s_1 << " s_1_other " << s_1_other << std::endl;
+    assert((s_1 - s_1_other < 1e-3) &&
+           "something wrong with root finding, please check!");
+    if (s_1 > 0) {
+      num_solution++;
+    }
+  }
+
+  return num_solution;
 }
 
 int main() {
